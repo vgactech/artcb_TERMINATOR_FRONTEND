@@ -28,7 +28,7 @@ jobs:
           from pathlib import Path
 
           html = Path("index.html").read_text(encoding="utf-8")
-          matches = re.findall(r'<script type="module">\\s*(.*?)\\s*</script>', html, re.S)
+          matches = re.findall(r'<script type="module">\s*(.*?)\s*</script>', html, re.S)
           if len(matches) != 1:
               raise SystemExit(f"Expected exactly one inline module script; found {len(matches)}")
           Path("/tmp/artcb-frontend-inline.mjs").write_text(matches[0], encoding="utf-8")
