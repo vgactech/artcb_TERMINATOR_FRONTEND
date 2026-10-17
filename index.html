@@ -235,7 +235,7 @@ import { FilesetResolver, HandLandmarker } from
 // ── Config ───────────────────────────────────────────────────────────────────
 // Point to local Guardian API (running: uvicorn guardian_api.app:app --port 8001)
 // Falls back gracefully if offline — demo still renders with simulated data.
-const API = (window.GUARDIAN_API_URL || 'http://localhost:8001').replace(/\/$/, '');
+const API = (window.GUARDIAN_API_URL || 'http://localhost:8002').replace(/\/$/, '');
 
 const $ = id => document.getElementById(id);
 
