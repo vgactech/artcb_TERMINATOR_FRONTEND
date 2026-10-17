@@ -72,18 +72,18 @@ The official examples recommend fictional or permissioned data, clear explanatio
 
 - Source fragments for the four hardening changes were matched before applying edits.
 - Automated browser execution and webcam validation have **not** been run in this environment.
-- A production build cannot yet be reported: this repository currently has a standalone `index.html` rather than a package manifest, test runner, or build pipeline.
+- A production build cannot yet be reported: this repository currently has a standalone `index.html` rather than a package manifest, test runner, or bundler pipeline.
+- A GitHub Actions static smoke workflow was added to extract the inline browser module, run `node --check`, and assert key camera/gesture/synthetic-data markers. Its execution result has not been confirmed in this audit.
 - CDN reachability, browser camera permissions, GPU/CPU delegate behavior, and real device performance remain to be verified in a browser.
 - Live ARTCB telemetry remains disconnected by design in this P0 prototype.
 
 ## Next actions
 
-1. Add a small project README documenting secure local serving and browser requirements.
-2. Verify syntax and run a browser smoke test on localhost or HTTPS.
-3. Add a deterministic gesture-state test harness and test camera denied/lost scenarios.
-4. Add a visible pointer/reticle and dwell-based pinch selection after usability testing.
-5. Inspect the real backend event contract before implementing a live data adapter. Keep simulated and live modes separate and unmistakably labelled.
-6. Prepare a second-person walkthrough and record acceptance evidence for the Track 3 submission.
+1. Run the newly added static smoke workflow and fix any syntax/marker failures.
+2. Run a browser smoke test on localhost or HTTPS and validate camera denied/lost scenarios.
+3. Add a deterministic gesture-state test harness; consider a visible fingertip reticle and dwell-based pinch selection after usability testing.
+4. Inspect the real backend event contract before implementing a live data adapter. Keep simulated and live modes separate and unmistakably labelled.
+5. Prepare a second-person walkthrough and record acceptance evidence for the Track 3 submission.
 
 ## References
 
