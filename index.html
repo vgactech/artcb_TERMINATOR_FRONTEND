@@ -214,7 +214,7 @@ async function startCamera(){
       toast('GPU delegate unavailable; MediaPipe is using CPU fallback.');
     }
     running=true;$('camera-stop').disabled=false;$('camera-chip').textContent='ON';$('hand-state').textContent='CAMERA ON · SHOW ONE HAND';
-    $('interaction').textContent='HAND TRACKING';toast('Camera enabled. Keep one hand visible; pinch selects the next demo node.');
+    $('interaction').textContent='HAND TRACKING';toast('Camera enabled. Keep one hand visible; point at a graph node and pinch to select it.');
   }catch(err){
     running=false;
     if(handLandmarker){handLandmarker.close();handLandmarker=null;}
