@@ -166,6 +166,10 @@ function updateHand(landmarks,confidence){
   const thumb=landmarks[4], index=landmarks[8], pinchDist=Math.hypot(thumb.x-index.x,thumb.y-index.y);
   const pinching=pinchDist<.055;
   const tip=landmarks[8];
+  // Map the fingertip to the scene's normalized pointer coordinates. The camera is
+  // treated as a mirror for intuitive hand-to-screen navigation.
+  pointer.x=(1-tip.x)*2-1;
+  pointer.y=1-tip.y*2;
   $('gesture').textContent=pinching?'PINCH / SELECT':(pinchDist>.12?'OPEN / POINT':'TRACKING');
   $('interaction').textContent=pinching?'HAND / SELECT':'HAND / ORBIT';
   const hx=landmarks[9].x, hy=landmarks[9].y;
@@ -175,8 +179,13 @@ function updateHand(landmarks,confidence){
   }
   lastHandX=hx;lastHandY=hy;
   if(pinching&&!lastPinch&&pinchArmed&&performance.now()-lastPinchAt>650){
-    // Pinch selects the next node; this is navigation only, never a privileged command.
-    selectNode(selectedIndex+1);lastPinchAt=performance.now();pinchArmed=false;
+    // Select the object actually under the fingertip. This is UI navigation only;
+    // gestures never authorize a privileged backend operation.
+    raycaster.setFromCamera(pointer,camera);
+    const hits=raycaster.intersectObjects(nodeObjects,false);
+    if(hits.length){selectNode(nodeObjects.indexOf(hits[0].object));}
+    else{toast('No node under fingertip. Point at a graph node and pinch.');}
+    lastPinchAt=performance.now();pinchArmed=false;
   }
   if(!pinching)pinchArmed=true;
   lastPinch=pinching;
@@ -195,12 +204,25 @@ async function startCamera(){
     stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
     video.srcObject=stream;await video.play();
     const vision=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm');
-    handLandmarker=await HandLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'GPU'},runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.55,minHandPresenceConfidence:.5,minTrackingConfidence:.5});
+    const modelAssetPath='https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
+    const taskOptions={runningMode:'VIDEO',numHands:1,minHandDetectionConfidence:.55,minHandPresenceConfidence:.5,minTrackingConfidence:.5};
+    try{
+      handLandmarker=await HandLandmarker.createFromOptions(vision,{...taskOptions,baseOptions:{modelAssetPath,delegate:'GPU'}});
+    }catch(gpuError){
+      // CPU fallback lets camera interaction work on browsers/devices without a usable WebGL delegate.
+      handLandmarker=await HandLandmarker.createFromOptions(vision,{...taskOptions,baseOptions:{modelAssetPath,delegate:'CPU'}});
+      toast('GPU delegate unavailable; MediaPipe is using CPU fallback.');
+    }
     running=true;$('camera-stop').disabled=false;$('camera-chip').textContent='ON';$('hand-state').textContent='CAMERA ON · SHOW ONE HAND';
-    $('interaction').textContent='HAND TRACKING';toast('Camera enabled. Keep one hand visible; pinch selects the next demo node.');
+    $('interaction').textContent='HAND TRACKING';toast('Camera enabled. Keep one hand visible; point at a graph node and pinch to select it.');
   }catch(err){
+    running=false;
+    if(handLandmarker){handLandmarker.close();handLandmarker=null;}
     if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+    video.srcObject=null;
+    $('camera-stop').disabled=true;
     $('camera-chip').textContent='OFF';$('hand-state').textContent='CAMERA UNAVAILABLE';$('tracking').textContent='Unavailable';
+    $('interaction').textContent='MOUSE / KEYBOARD';
     toast('Camera / MediaPipe unavailable: '+(err?.message||String(err)).slice(0,140));
   }finally{$('camera-start').disabled=false;}
 }
